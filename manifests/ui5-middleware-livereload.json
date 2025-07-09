@@ -1,0 +1,17 @@
+{
+  "$schema": "https://example.com/ui5-plugin-loader.schema.json",
+  "middleware": [
+    {
+      "name": "ui5-middleware-livereload",
+      "afterMiddleware": "compression",
+      "configuration": {
+        "debug": false,
+        "extraExts": "jsx,ts,tsx,xml,json,properties",
+        "port": 35729,
+        "usePolling": false,
+        "includeFwkDeps": false,
+        "includeAppDeps": false
+      }
+    }
+  ]
+} 

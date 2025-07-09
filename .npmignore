@@ -1,0 +1,39 @@
+# Development files
+sample-app/
+.git/
+.gitignore
+.DS_Store
+node_modules/
+package-lock.json
+
+# Test files
+test/
+*.test.js
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history 

@@ -1,0 +1,17 @@
+{
+	"name": "com.pluginloader",
+	"version": "1.0.0",
+	"private": true,
+	"description": "Sample UI5 application demonstrating ui5-plugin-loader",
+	"scripts": {
+		"start": "ui5 serve --open index.html",
+		"start-silent": "ui5 serve",
+		"build": "ui5 build --dest dist"
+	},
+	"devDependencies": {
+		"@ui5/cli": "^4.0.0",
+		"ui5-plugin-loader": "file:..",
+		"ui5-tooling-transpile": "^3.4.0",
+		"ui5-middleware-livereload": "^3.0.0"
+	}
+}

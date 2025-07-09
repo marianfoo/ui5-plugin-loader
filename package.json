@@ -1,0 +1,42 @@
+{
+  "name": "ui5-plugin-loader",
+  "version": "0.0.1",
+  "description": "Auto-mounts UI5 tooling extensions based on manifest JSON files",
+  "author": "Marian Zeis",
+  "license": "MIT",
+  "homepage": "https://github.com/marianzeis/ui5-plugin-loader#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marianzeis/ui5-plugin-loader.git"
+  },
+  "main": "lib/middleware.js",
+  "scripts": {
+    "lint": "eslint lib",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "files": [
+    "lib/",
+    "manifests/",
+    "README.md"
+  ],
+  "keywords": [
+    "ui5",
+    "tooling",
+    "middleware",
+    "task",
+    "plugin",
+    "loader",
+    "auto-mount",
+    "extensions"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^8.0.0"
+  },
+  "peerDependencies": {
+    "@ui5/project": ">=3 <5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+} 

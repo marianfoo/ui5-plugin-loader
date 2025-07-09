@@ -1,0 +1,41 @@
+{
+  "$schema": "https://example.com/ui5-plugin-loader.schema.json",
+  "middleware": [
+    {
+      "name": "ui5-tooling-modules-middleware",
+      "afterMiddleware": "compression",
+      "configuration": {
+        "debug": false,
+        "skipTransform": false,
+        "persistentCache": true,
+        "watch": true,
+        "watchDebounce": 100,
+        "entryPoints": [],
+        "useRelativeModulePaths": false,
+        "addToNamespace": true,
+        "additionalDependencies": [],
+        "keepDynamicImports": true,
+        "dynamicEntriesPath": "_dynamics"
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "name": "ui5-tooling-modules-task",
+      "afterTask": "replaceVersion",
+      "configuration": {
+        "debug": false,
+        "skipTransform": false,
+        "addToNamespace": true,
+        "sourcemap": false,
+        "prependPathMappings": false,
+        "minify": false,
+        "removeScopePrefix": false,
+        "providedDependencies": [],
+        "includeAssets": {},
+        "keepDynamicImports": true,
+        "dynamicEntriesPath": "_dynamics"
+      }
+    }
+  ]
+} 

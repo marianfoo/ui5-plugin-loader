@@ -1,0 +1,32 @@
+{
+  "$schema": "https://example.com/ui5-plugin-loader.schema.json",
+  "middleware": [
+    {
+      "name": "ui5-tooling-transpile-middleware",
+      "afterMiddleware": "compression",
+      "configuration": {
+        "debug": false,
+        "excludePatterns": [
+          "/resources/sap/ui/thirdparty/"
+        ],
+        "transformTypeScript": true,
+        "transformModulesToUI5": true
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "name": "ui5-tooling-transpile-task",
+      "afterTask": "replaceVersion",
+      "configuration": {
+        "debug": false,
+        "excludePatterns": [
+          "/resources/sap/ui/thirdparty/"
+        ],
+        "transformTypeScript": true,
+        "transformModulesToUI5": true,
+        "omitTSFromBuildResult": true
+      }
+    }
+  ]
+} 
