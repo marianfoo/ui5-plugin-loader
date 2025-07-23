@@ -1,22 +1,27 @@
 # ui5‑plugin‑loader
 
-> **A UI5 Tooling extension that auto‑mounts other extensions based on manifest JSON files**
-
-[![npm version](https://badge.fury.io/js/ui5-plugin-loader.svg)](https://badge.fury.io/js/ui5-plugin-loader)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+> **A UI5 Tooling v4 extension that auto‑mounts other extensions based on manifest JSON files**
 
 ## Overview
 
-**ui5‑plugin‑loader** provides a *zero‑configuration* mechanism that automatically discovers and loads UI5 tooling extensions based on manifest JSON files. Simply add one entry to your `ui5.yaml` and all compatible dependencies will be loaded automatically.
+**ui5‑plugin‑loader v0.2.x** provides a *single‑line* integration that automatically discovers and loads UI5 tooling extensions based on manifest JSON files. Simply add one entry to your `ui5.yaml` and all compatible dependencies will be loaded automatically in the correct order.
 
 ## Features
 
-- ✅ **Zero-config setup** - Only requires a single `ui5.yaml` entry
+- ✅ **Single-line setup** - Only requires one `ui5.yaml` entry
 - ✅ **Auto-discovery** - Scans all dependencies for manifest files
+- ✅ **Smart ordering** - Fixed pattern ordering: stringreplace → transpile → modules → livereload → rest
 - ✅ **Server & Build support** - Works with both `ui5 serve` and `ui5 build`
 - ✅ **Fallback manifests** - Includes manifests for popular extensions
+- ✅ **Disable/Override support** - Disable extensions or override their configuration
 - ✅ **Graceful failure** - Invalid manifests won't crash your dev server
 - ✅ **Comprehensive logging** - Uses `@ui5/logger` with configurable levels
+
+## Requirements
+
+- **UI5 Tooling v4.0 or higher** (for dynamic middleware registration)
+- **Node.js v18.0.0 or higher**
+- **npm v8 or higher**
 
 ## Installation
 
@@ -29,7 +34,7 @@ npm install --save-dev ui5-plugin-loader
 ### 1. Add to your `ui5.yaml`
 
 ```yaml
-specVersion: '3.0'
+specVersion: '4.0'
 metadata:
   name: my-ui5-app
 type: application
@@ -41,7 +46,7 @@ server:
 
 builder:
   customTasks:
-    - name: ui5-plugin-loader
+    - name: ui5-plugin-loader-task
       afterTask: replaceVersion
 ```
 
@@ -52,6 +57,8 @@ Install any supported UI5 tooling extension:
 ```bash
 npm install --save-dev ui5-tooling-modules
 npm install --save-dev ui5-middleware-livereload
+npm install --save-dev ui5-tooling-transpile
+npm install --save-dev ui5-tooling-stringreplace
 ```
 
 ### 3. Run your project
@@ -64,18 +71,22 @@ That's it! The plugin loader will automatically:
 1. Scan all your dependencies and devDependencies
 2. Look for `ui5-plugin-loader.json` manifests in each package
 3. Fall back to built-in manifests for popular extensions
-4. Auto-register all found middlewares and tasks
+4. Auto-register all found middlewares and tasks with smart ordering
 
 ## Currently Supported Extensions
 
 The plugin loader includes built-in support for these popular UI5 tooling extensions:
 
 ### Middlewares
-- **`ui5-tooling-modules`** - Transforms ES modules and Node.js modules for UI5
-- **`ui5-middleware-livereload`** - Provides live reload functionality for development
+- **`ui5-tooling-stringreplace`** - String replacement for placeholders
+- **`ui5-tooling-transpile`** - TypeScript and modern JavaScript transpilation
+- **`ui5-tooling-modules`** - ES modules and Node.js modules transformation
+- **`ui5-middleware-livereload`** - Live reload functionality for development
 
 ### Tasks  
-- **`ui5-tooling-modules`** - Build-time transformation of ES modules and Node.js modules
+- **`ui5-tooling-stringreplace`** - Build-time string replacement
+- **`ui5-tooling-transpile`** - Build-time TypeScript transpilation
+- **`ui5-tooling-modules`** - Build-time modules transformation
 
 ### Adding More Extensions
 
@@ -83,13 +94,16 @@ To add support for additional extensions, create a manifest file in the `manifes
 
 ## How It Works
 
-The plugin loader follows this discovery process:
+The plugin loader follows this discovery and processing pipeline:
 
-1. **Dependency Scanning**: Reads your `package.json` to get all dependencies and devDependencies
-2. **Manifest Discovery**: For each dependency `<package-name>`, looks for:
-   - `node_modules/<package-name>/ui5-plugin-loader.json` (preferred)
-   - `manifests/<package-name>.json` (fallback in this package)
-3. **Auto-Registration**: Uses official UI5 tooling APIs to register found middlewares and tasks
+1. **Load Configuration**: Validate and normalize the configuration options
+2. **Discover Manifests**: Scan dependencies for manifest files  
+3. **Apply Disable**: Remove extensions from the disable list
+4. **Fill Defaults**: Add default `afterMiddleware: compression` and `afterTask: replaceVersion`
+5. **Apply Overrides**: Merge override configurations
+6. **Validate References**: Check that all after/before targets exist
+7. **Deduplicate**: Remove duplicates (first occurrence wins)
+8. **Smart Sort**: Apply fixed pattern ordering: stringreplace → transpile → modules → livereload → rest
 
 ## Configuration Options
 
@@ -101,17 +115,95 @@ server:
     - name: ui5-plugin-loader
       afterMiddleware: compression
       configuration:
-        manifestsDir: "custom-manifests"  # Default: "manifests"
-        debug: false                      # Enable debug logging
+        debug: false                            # Enable debug logging
+        disable:                               # Disable specific extensions
+          - ui5-middleware-livereload
+          - ui5-tooling-stringreplace-middleware
+        override:                             # Override extension configurations
+          ui5-tooling-transpile-middleware:
+            afterMiddleware: ui5-tooling-stringreplace-middleware
+            configuration:
+              debug: true
 
 builder:
   customTasks:
-    - name: ui5-plugin-loader
+    - name: ui5-plugin-loader-task
       afterTask: replaceVersion
       configuration:
-        manifestsDir: "custom-manifests"  # Default: "manifests"
-        debug: false                      # Enable debug logging
+        debug: false                            # Enable debug logging
+        disable:                               # Disable specific extensions
+          - ui5-tooling-stringreplace-task
+        override:                             # Override extension configurations
+          ui5-tooling-modules-task:
+            afterTask: ui5-tooling-transpile-task
+            configuration:
+              debug: true
 ```
+
+### Configuration Properties
+
+- **`debug`** *(boolean, default: false)*: Enable debug logging to `@ui5/logger` verbose
+- **`disable`** *(string[], default: [])*: Array of extension names to disable
+- **`override`** *(object, default: {})*: Override configurations for specific extensions
+  - Each key is an extension name
+  - Each value can contain:
+    - `afterMiddleware`/`beforeMiddleware` - Change middleware order
+    - `afterTask`/`beforeTask` - Change task order  
+    - `mountPath` - Override middleware mount path
+    - `configuration` - Merge with extension's default configuration
+
+## Example Configurations
+
+### Basic Development Setup
+```yaml
+server:
+  customMiddleware:
+    - name: ui5-plugin-loader
+      afterMiddleware: compression
+```
+
+### TypeScript Development with Customization
+```yaml
+server:
+  customMiddleware:
+    - name: ui5-plugin-loader
+      afterMiddleware: compression
+      configuration:
+        debug: true
+        disable:
+          - ui5-middleware-livereload  # Disable livereload
+        override:
+          ui5-tooling-stringreplace-middleware:
+            configuration:
+              files: ["**/*.ts"]       # Only process TypeScript files
+```
+
+### Production Build Configuration
+```yaml
+builder:
+  customTasks:
+    - name: ui5-plugin-loader-task
+      afterTask: replaceVersion
+      configuration:
+        disable:
+          - ui5-tooling-stringreplace-task  # Skip string replacement in production
+        override:
+          ui5-tooling-modules-task:
+            configuration:
+              minify: true                  # Enable minification
+```
+
+## Smart Ordering
+
+The plugin loader uses a fixed pattern ordering system:
+
+1. **String replacement** (priority 10) - `ui5-tooling-stringreplace-*`
+2. **Transpilation** (priority 20) - `ui5-tooling-transpile-*`
+3. **Modules** (priority 30) - `ui5-tooling-modules-*`
+4. **Live reload** (priority 40) - `ui5-middleware-livereload`
+5. **Rest** (priority 50) - All other extensions
+
+This ensures that transformations happen in the correct order without manual configuration.
 
 ## Extension Development Guide
 
@@ -119,125 +211,22 @@ builder:
 
 To make your UI5 tooling extension work with the plugin loader:
 
-#### 1. Create a Manifest File
-
-Add a `ui5-plugin-loader.json` file to your extension package root:
+1. **Create a manifest file** `ui5-plugin-loader.json` in your package root:
 
 ```json
 {
-  "$schema": "https://example.com/ui5-plugin-loader.schema.json",
+  "$schema": "https://sap.github.io/ui5-plugin-loader/schema/ui5-plugin-loader.schema.json",
   "middleware": [
     {
-      "name": "my-awesome-middleware",
-      "afterMiddleware": "compression",
+      "name": "my-custom-middleware",
       "configuration": {
-        "debug": false,
-        "customOption": "value"
+        "debug": false
       }
     }
   ],
   "tasks": [
     {
-      "name": "my-awesome-task", 
-      "afterTask": "replaceVersion",
-      "configuration": {
-        "debug": false,
-        "customOption": "value"
-      }
-    }
-  ]
-}
-```
-
-#### 2. Follow Naming Conventions
-
-The plugin loader maps extension names to package names using these patterns:
-
-- `ui5-tooling-transpile-middleware` → `ui5-tooling-transpile`
-- `ui5-tooling-modules-task` → `ui5-tooling-modules`
-- `ui5-middleware-livereload` → `ui5-middleware-livereload`
-
-#### 3. File Structure
-
-Ensure your extension follows the expected file structure:
-
-```
-my-extension/
-├── lib/
-│   ├── middleware.js    # For middleware extensions
-│   └── task.js         # For task extensions
-├── package.json
-└── ui5-plugin-loader.json
-```
-
-Alternative paths that the loader will try:
-- `lib/middleware.js` or `lib/livereload.js`
-- `middleware.js` (root level)
-- `index.js` (root level)
-
-### Manifest Schema Reference
-
-#### Middleware Configuration
-
-```json
-{
-  "middleware": [
-    {
-      "name": "extension-name",           // Required: Extension name
-      "afterMiddleware": "compression",   // Optional: Middleware to run after
-      "configuration": {                  // Optional: Extension configuration
-        "debug": false,
-        "customOption": "value"
-      }
-    }
-  ]
-}
-```
-
-#### Task Configuration
-
-```json
-{
-  "tasks": [
-    {
-      "name": "extension-name",          // Required: Extension name
-      "afterTask": "replaceVersion",     // Optional: Task to run after  
-      "configuration": {                 // Optional: Extension configuration
-        "debug": false,
-        "customOption": "value"
-      }
-    }
-  ]
-}
-```
-
-### Testing Your Extension
-
-1. Install your extension in a UI5 project
-2. Add `ui5-plugin-loader` to the project
-3. Run `ui5 serve --verbose` to see if your extension is discovered
-4. Check the logs for any loading errors
-
-## Creating Custom Manifests
-
-If an extension doesn't provide its own manifest, you can create one:
-
-### 1. Create a Custom Manifests Directory
-
-```bash
-mkdir custom-manifests
-```
-
-### 2. Add Manifest Files
-
-Create `custom-manifests/<package-name>.json`:
-
-```json
-{
-  "middleware": [
-    {
-      "name": "some-third-party-middleware",
-      "afterMiddleware": "compression",
+      "name": "my-custom-task",
       "configuration": {
         "debug": false
       }
@@ -246,96 +235,53 @@ Create `custom-manifests/<package-name>.json`:
 }
 ```
 
-### 3. Configure Plugin Loader
+2. **Follow naming conventions**:
+   - Middleware: `<package-name>-middleware` or `<package-name>`
+   - Tasks: `<package-name>-task`
+
+3. **Test with the plugin loader**:
+   - Install your extension alongside `ui5-plugin-loader`
+   - Verify it gets auto-discovered and registered
+
+## Troubleshooting
+
+### Enable Debug Logging
 
 ```yaml
 server:
   customMiddleware:
     - name: ui5-plugin-loader
       configuration:
-        manifestsDir: "custom-manifests"
+        debug: true
 ```
-
-## Logging
-
-The plugin loader uses `@ui5/logger` with the category `ui5-plugin-loader`. Log levels:
-
-- **ERROR**: Critical failures that don't crash the server
-- **WARN**: Non-critical issues (missing packages, invalid configs)
-- **INFO**: General information about loaded extensions
-- **VERBOSE**: Detailed debug information
-
-Example log output:
-
-```
-[INFO] ui5-plugin-loader: Starting plugin loader...
-[INFO] ui5-plugin-loader: Scanning 15 dependencies for manifests
-[INFO] ui5-plugin-loader: Found manifest for ui5-tooling-modules in package
-[INFO] ui5-plugin-loader: Loaded middleware: ui5-tooling-modules-middleware
-[INFO] ui5-plugin-loader: Plugin loader completed: loaded 1 middleware, 1 tasks (25 ms)
-```
-
-## Troubleshooting
 
 ### Common Issues
 
-**No extensions are being loaded**
-- Ensure your dependencies are installed in `node_modules`
-- Check that manifest files exist and are valid JSON
-- Enable verbose logging: `ui5 serve --verbose`
-
-**Extension not found**
-- Verify the extension package is listed in your `package.json` dependencies
-- Check that the package name in the manifest matches the actual package name
-- Ensure the extension follows expected file structure
-
-**Build failures**
-- The plugin loader gracefully handles errors during builds
-- Invalid manifests are logged as errors but don't stop the build process
-- Check console output for specific error messages
-
-### Debug Logging
-
-Enable debug logging to troubleshoot issues:
-
-```bash
-ui5 serve --verbose
-```
-
-Or enable specific debug categories:
-
-```bash
-DEBUG=ui5-plugin-loader* ui5 serve
-```
+1. **Extension not found**: Ensure the package is in your `dependencies` or `devDependencies`
+2. **Wrong order**: Use the `override` configuration to adjust ordering
+3. **Duplicate registration**: Check for manual registrations in your `ui5.yaml`
 
 ## Contributing
-
-Contributions are welcome! Please:
 
 1. Fork the repository
 2. Create a feature branch
 3. Add tests for new functionality
-4. Update documentation as needed
-5. Submit a pull request
-
-### Adding Support for New Extensions
-
-To add support for a new extension:
-
-1. Create a manifest file in `manifests/<extension-name>.json`
-2. Test the manifest with the extension
-3. Submit a PR with the new manifest
+4. Submit a pull request
 
 ## License
 
-MIT © Marian Zeis
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Related Projects
+## Changelog
 
-- [UI5 Tooling](https://sap.github.io/ui5-tooling/) - The official UI5 build and development tooling
-- [UI5 Community](https://github.com/ui5-community) - Community extensions for UI5 tooling
-- [ui5-tooling-modules](https://github.com/ui5-community/ui5-ecosystem-showcase/tree/main/packages/ui5-tooling-modules) - ES modules support for UI5
+### v0.2.x
+- ✅ Removed preset functionality (breaking change)
+- ✅ Added `debug`, `disable`, and `override` configuration options
+- ✅ Implemented fixed pattern smart ordering
+- ✅ Improved pipeline processing with validation
+- ✅ Enhanced error handling and logging
 
----
-
-*For more information about UI5 development, visit the [SAP UI5 Documentation](https://ui5.sap.com/).* 
+### v0.1.x
+- ✅ Initial release with basic auto-discovery
+- ✅ Support for popular UI5 tooling extensions
+- ✅ Preset functionality (deprecated in v0.2.x) 

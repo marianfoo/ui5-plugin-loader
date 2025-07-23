@@ -1,5 +1,5 @@
 # https://sap.github.io/ui5-tooling/pages/extensibility/CustomServerMiddleware/
-specVersion: "3.1"
+specVersion: "4.0"
 metadata:
   name: ui5-plugin-loader
 kind: extension
@@ -8,7 +8,7 @@ middleware:
   path: lib/middleware.js
 ---
 # https://sap.github.io/ui5-tooling/pages/extensibility/CustomTasks/
-specVersion: "3.1"
+specVersion: "4.0"
 metadata:
   name: ui5-plugin-loader-task
 kind: extension

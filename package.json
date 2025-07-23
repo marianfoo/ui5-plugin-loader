@@ -1,6 +1,6 @@
 {
   "name": "ui5-plugin-loader",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "Auto-mounts UI5 tooling extensions based on manifest JSON files",
   "author": "Marian Zeis",
   "license": "MIT",
@@ -12,11 +12,13 @@
   "main": "lib/middleware.js",
   "scripts": {
     "lint": "eslint lib",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "generate-context": "node scripts/generate-context.js"
   },
   "files": [
     "lib/",
     "manifests/",
+    "schema/",
     "README.md"
   ],
   "keywords": [
@@ -29,7 +31,9 @@
     "auto-mount",
     "extensions"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "ajv": "^8.17.1"
+  },
   "devDependencies": {
     "eslint": "^8.0.0"
   },

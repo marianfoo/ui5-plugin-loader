@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sap.github.io/ui5-plugin-loader/schema/loader-config.schema.json",
+  "title": "UI5 Plugin Loader Configuration",
+  "description": "Schema for UI5 Plugin Loader configuration block",
+  "type": "object",
+  "properties": {
+    "debug": {
+      "type": "boolean",
+      "description": "Enable debug logging",
+      "default": false
+    },
+    "disable": {
+      "type": "array",
+      "description": "List of extension names to disable",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z@][a-z0-9@._\\-/]*$",
+        "minLength": 3,
+        "maxLength": 80
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "override": {
+      "type": "object",
+      "description": "Override configurations for specific extensions",
+      "patternProperties": {
+        "^[a-z@][a-z0-9@._\\-/]*$": {
+          "type": "object",
+          "properties": {
+            "afterMiddleware": {
+              "type": "string",
+              "description": "Middleware to run after"
+            },
+            "beforeMiddleware": {
+              "type": "string",
+              "description": "Middleware to run before"
+            },
+            "afterTask": {
+              "type": "string",
+              "description": "Task to run after"
+            },
+            "beforeTask": {
+              "type": "string",
+              "description": "Task to run before"
+            },
+            "mountPath": {
+              "type": "string",
+              "description": "Mount path for middleware"
+            },
+            "configuration": {
+              "type": "object",
+              "description": "Configuration object to merge with extension defaults"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false,
+      "default": {}
+    }
+  },
+  "additionalProperties": false
+} 

@@ -1,0 +1,173 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sap.github.io/ui5-plugin-loader/schema/ui5-plugin-loader.schema.json",
+  "title": "UI5 Plugin Loader Manifest",
+  "description": "Schema for UI5 Plugin Loader manifest files",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Reference to this schema"
+    },
+    "middleware": {
+      "type": "array",
+      "description": "Array of middleware configurations",
+      "items": {
+        "$ref": "#/definitions/middleware"
+      }
+    },
+    "tasks": {
+      "type": "array", 
+      "description": "Array of task configurations",
+      "items": {
+        "$ref": "#/definitions/task"
+      }
+    },
+    "presets": {
+      "type": "object",
+      "description": "Predefined extension presets",
+      "additionalProperties": {
+        "$ref": "#/definitions/preset"
+      }
+    }
+  },
+  "anyOf": [
+    { "required": ["middleware"] },
+    { "required": ["tasks"] },
+    { "required": ["presets"] }
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "extensionName": {
+      "type": "string",
+      "pattern": "^[a-z@][a-z0-9@._\\-/]*$",
+      "minLength": 3,
+      "maxLength": 80,
+      "description": "Valid UI5 extension name following naming conventions"
+    },
+    "dependencies": {
+      "type": "object",
+      "properties": {
+        "before": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/extensionName"
+          },
+          "description": "Extensions that should run after this one"
+        },
+        "after": {
+          "type": "array", 
+          "items": {
+            "$ref": "#/definitions/extensionName"
+          },
+          "description": "Extensions that should run before this one"
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Priority for ordering (lower numbers run first)"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["stringreplace", "transpilation", "modules", "livereload", "default"],
+          "description": "Category for smart ordering"
+        }
+      },
+      "additionalProperties": false
+    },
+    "middleware": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/extensionName",
+          "description": "Name of the middleware extension"
+        },
+        "afterMiddleware": {
+          "type": "string",
+          "description": "Middleware to run after"
+        },
+        "beforeMiddleware": {
+          "type": "string",
+          "description": "Middleware to run before"
+        },
+        "mountPath": {
+          "type": "string",
+          "description": "Optional mount path for the middleware"
+        },
+        "configuration": {
+          "type": "object",
+          "description": "Configuration object passed to the middleware"
+        },
+        "dependencies": {
+          "$ref": "#/definitions/dependencies",
+          "description": "Dependency information for ordering"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Explicit order for preset middlewares"
+        }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+    "task": {
+      "type": "object", 
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/extensionName",
+          "description": "Name of the task extension"
+        },
+        "afterTask": {
+          "type": "string",
+          "description": "Task to run after"
+        },
+        "beforeTask": {
+          "type": "string",
+          "description": "Task to run before"
+        },
+        "configuration": {
+          "type": "object",
+          "description": "Configuration object passed to the task"
+        },
+        "dependencies": {
+          "$ref": "#/definitions/dependencies",
+          "description": "Dependency information for ordering"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Explicit order for preset tasks"
+        }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+    "preset": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of the preset"
+        },
+        "middleware": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/middleware"
+          },
+          "description": "Middleware configurations in this preset"
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/task"
+          },
+          "description": "Task configurations in this preset"
+        }
+      },
+      "required": ["description"],
+      "additionalProperties": false
+    }
+  }
+} 

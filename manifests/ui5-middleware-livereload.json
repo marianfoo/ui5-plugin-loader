@@ -1,9 +1,8 @@
 {
-  "$schema": "https://example.com/ui5-plugin-loader.schema.json",
+  "$schema": "https://sap.github.io/ui5-plugin-loader/schema/ui5-plugin-loader.schema.json",
   "middleware": [
     {
       "name": "ui5-middleware-livereload",
-      "afterMiddleware": "compression",
       "configuration": {
         "debug": false,
         "extraExts": "jsx,ts,tsx,xml,json,properties",
@@ -11,6 +10,11 @@
         "usePolling": false,
         "includeFwkDeps": false,
         "includeAppDeps": false
+      },
+      "dependencies": {
+        "after": ["ui5-tooling-stringreplace-middleware", "ui5-tooling-transpile-middleware", "ui5-tooling-modules-middleware"],
+        "priority": 40,
+        "category": "livereload"
       }
     }
   ]
